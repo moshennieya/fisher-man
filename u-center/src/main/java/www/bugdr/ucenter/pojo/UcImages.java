@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <p>
@@ -14,6 +16,8 @@ import io.swagger.annotations.ApiModelProperty;
  * @author bugdr
  * @since 2022-01-21
  */
+@Data
+@EqualsAndHashCode(callSuper = false)
 @TableName("uc_images")
 @ApiModel(value = "UcImages对象", description = "")
 public class UcImages implements Serializable {
