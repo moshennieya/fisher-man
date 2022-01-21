@@ -26,6 +26,11 @@ public class R {
     //数据
     private Object data;
 
+    public R setData(Object data) {
+        this.data = data;
+        return this;
+    }
+
     // 提供一些静态的方法，可以快速创建返回对象
     public static R SUCCESS(String msg) {
         R r = new R();

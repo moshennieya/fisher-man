@@ -5,8 +5,13 @@ spring:
     name: u-center
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mybatis_plus_demo?characterEncoding=utf-8&useSSL=false&useUnicode=true
+    url: jdbc:mysql://localhost:3306/mo_yu_ucenter?characterEncoding=utf-8&useSSL=false&useUnicode=true
     username: root
+    password: 123456
+  redis:
+    database: 2 #我的0号库使用在其他项目上，我用2号库
+    host: 152.136.183.34
+    port: 6379
     password: 123456
 mybatis-plus:
   configuration:

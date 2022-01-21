@@ -1,8 +1,10 @@
 package www.bugdr.ucenter.api.portal;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import www.bugdr.common.response.R;
+import www.bugdr.common.utils.RedisUtils;
 
 /**
  * <p>
@@ -23,8 +25,13 @@ import www.bugdr.common.response.R;
 @RestController
 public class UcUserController {
 
+    @Autowired
+    private RedisUtils redisUtils;
+
     @PostMapping("/user")
     public R register() {
-        return null;
+        redisUtils.set("test", "testContent",10);
+        String content = (String) redisUtils.get("test");
+        return R.SUCCESS("读写成功").setData(content);
     }
 }

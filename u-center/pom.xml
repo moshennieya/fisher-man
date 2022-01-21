@@ -92,10 +92,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!--redis-->
+        <!--验证码-->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <groupId>com.anji-plus</groupId>
+            <artifactId>spring-boot-starter-captcha</artifactId>
+            <version>1.3.0</version>
         </dependency>
 
     </dependencies>
