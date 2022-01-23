@@ -8,6 +8,9 @@ public interface Constants {
         String KEY_EMAIL_CODE_IP = "key_email_code_ip_";
         String KEY_EMAIL_CODE_ADDRESS = "key_email_code_address_";
         String KEY_EMAIL_CODE = "key_email_code_";
+        String DEFAULT_AVATAR = "https://imgs.sunofbeaches.com/group1/M00/00/40/rBsADWAYITCAJpK1AABZPRa3kCo649.png";
+        String STATUS_NORMAL = "1"; // 正常
+        String STATUS_DISABLE = "0"; // 禁用
     }
 
     interface TimeSecond {
