@@ -1,5 +1,12 @@
 package www.bugdr.ucenter.service.impl;
 
+import com.anji.captcha.model.common.RepCodeEnum;
+import com.anji.captcha.model.common.ResponseModel;
+import com.anji.captcha.model.vo.CaptchaVO;
+import com.anji.captcha.service.CaptchaCacheService;
+import com.anji.captcha.service.CaptchaService;
+import com.anji.captcha.service.impl.CaptchaServiceFactory;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +16,9 @@ import www.bugdr.common.response.R;
 import www.bugdr.common.utils.Constants;
 import www.bugdr.common.utils.RedisUtils;
 import www.bugdr.common.utils.TextUtils;
+import www.bugdr.ucenter.pojo.UcUserInfo;
 import www.bugdr.ucenter.service.IUcUserExService;
+import www.bugdr.ucenter.service.IUcUserInfoService;
 import www.bugdr.ucenter.utils.EmailSendUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,15 +34,41 @@ public class UcUserExServiceImpl implements IUcUserExService {
     @Autowired
     private RedisUtils redisUtils;
 
+    @Autowired
+    private IUcUserInfoService iUcUserInfoService;
+
+    @Autowired
+    private CaptchaService captchaService;
+
     /**
      * 发送邮箱验证码
      *
+     * @param verifition    验证码校验
      * @param emaillAddress 邮箱地址
      * @param mustRegister  邮箱地址是否已经检查注册
      * @return
      */
     @Override
-    public R sendEmailCode(String emaillAddress, boolean mustRegister) {
+    public R sendEmailCode(String verifition, String emaillAddress, boolean mustRegister) {
+        CaptchaVO captchaVO = new CaptchaVO();
+        captchaVO.setCaptchaVerification(verifition);
+        //这种验证方式会删除，只能验证一次
+        ResponseModel response = captchaService.verification(captchaVO);
+        String reqCode = response.getRepCode();
+        if (!response.isSuccess()) {
+            //验证码校验失败，返回信息告诉前端
+            //repCode  0000  无异常，代表成功
+            //repCode  9999  服务器内部异常
+            //repCode  0011  参数不能为空
+            //repCode  6110  验证码已失效，请重新获取
+            //repCode  6111  验证失败
+            //repCode  6112  获取验证码失败,请联系管理员
+            if (reqCode != null && reqCode.equals(RepCodeEnum.API_CAPTCHA_COORDINATE_ERROR.getCode())) {
+                return R.FAILED(RepCodeEnum.API_CAPTCHA_COORDINATE_ERROR.getDesc());
+            } else if (reqCode == null || !reqCode.equals(RepCodeEnum.SUCCESS.getCode())) {
+                return R.FAILED("图灵验证码失败.");
+            }
+        }
         //先检查数据
         if (TextUtils.isEmpty(emaillAddress)) {
             return R.FAILED("邮箱地址不可以为空.");
@@ -45,9 +80,17 @@ public class UcUserExServiceImpl implements IUcUserExService {
         if (!m.matches()) {
             return R.FAILED("请检查邮箱格式.");
         }
-        //根据比较验证该邮箱是否必须注册
-        if (mustRegister) {
-
+        //不管是true or false，都有查邮箱是否存在
+        QueryWrapper<UcUserInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("email", emaillAddress);
+        queryWrapper.select("id");
+        UcUserInfo ucUserInfo = iUcUserInfoService.getBaseMapper().selectOne(queryWrapper);
+        //存在邮箱
+        if (ucUserInfo != null && !mustRegister) {
+            return R.FAILED("该邮箱已经被注册.");
+        }
+        if (ucUserInfo == null && mustRegister) {
+            return R.FAILED("该邮箱未注册.");
         }
         //防止恶意频繁调用，可以通过ip，通过邮箱地址
         ServletRequestAttributes requestAttributes =
@@ -109,4 +152,5 @@ public class UcUserExServiceImpl implements IUcUserExService {
         EmailSendUtils.sendEmailCode(emaillAddress, "验证码：" + emailCode + ", 5分钟之内有效");
         return R.SUCCESS("邮箱验证码发送成功.");
     }
+
 }

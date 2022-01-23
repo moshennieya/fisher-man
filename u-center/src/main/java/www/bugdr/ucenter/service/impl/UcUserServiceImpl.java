@@ -95,6 +95,11 @@ public class UcUserServiceImpl extends ServiceImpl<UcUserMapper, UcUser> impleme
         targetUser.setStatus(Constants.User.STATUS_NORMAL);
         //入库
         this.baseMapper.insert(targetUser);
+        //添加用户信息表
+        UcUserInfo targetUcUserInfo = new UcUserInfo();
+        targetUcUserInfo.setUserId(targetUser.getId());
+        targetUcUserInfo.setEmail(email);
+        iUcUserInfoService.save(targetUcUserInfo);
         //返回结果
         return R.SUCCESS("注册成功.");
     }

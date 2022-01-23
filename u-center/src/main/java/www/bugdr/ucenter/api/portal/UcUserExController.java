@@ -26,7 +26,8 @@ public class UcUserExController {
      * 发送邮箱验证码
      */
     @GetMapping("/uc/send/re/email-code")
-    public R sendRegisterEmailCode(@RequestParam("email") String emaillAddress) {
-        return iUcUserExService.sendEmailCode(emaillAddress, false);
+    public R sendRegisterEmailCode(@RequestParam("verifition") String verifition,
+                                   @RequestParam("email") String emaillAddress) {
+        return iUcUserExService.sendEmailCode(verifition, emaillAddress, false);
     }
 }

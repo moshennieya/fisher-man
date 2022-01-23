@@ -43,7 +43,7 @@ public class UcUser extends UcUserInfo implements Serializable {
     private String salt;
 
     @ApiModelProperty("等级")
-    private Integer lev;
+    private Integer lev = 0;
 
     @ApiModelProperty("性别")
     private String sex;
