@@ -1,6 +1,6 @@
 package www.bugdr.common.utils;
 
-public class TestUtils {
+public class TextUtils {
 
     /**
      * 判断字符串是否为空

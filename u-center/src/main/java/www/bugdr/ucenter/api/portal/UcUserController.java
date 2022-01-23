@@ -28,7 +28,7 @@ public class UcUserController {
     @Autowired
     private RedisUtils redisUtils;
 
-    @PostMapping("/user")
+    @PostMapping("/uc/user")
     public R register() {
         redisUtils.set("test", "testContent",10);
         String content = (String) redisUtils.get("test");

@@ -27,27 +27,27 @@ import www.bugdr.common.response.R;
 @RestController
 public class UcCheckController {
 
-    @GetMapping("/check/captcha")
+    @GetMapping("/uc/check/captcha")
     public R getVerifyCode() {
         return null;
     }
 
-    @GetMapping("/check/phone_num")
+    @GetMapping("/uc/check/phone_num")
     public R checkPhoneNum() {
         return null;
     }
 
-    @GetMapping("/check/phone_verify_code")
+    @GetMapping("/uc/check/phone_verify_code")
     public R getPhoneVerifyCode() {
         return null;
     }
 
-    @GetMapping("/check/email")
+    @GetMapping("/uc/check/email")
     public R checkEmail() {
         return null;
     }
 
-    @GetMapping("/check/email_verify_code")
+    @GetMapping("/uc/check/email_verify_code")
     public R getEmailVerifyCode() {
         return null;
     }
