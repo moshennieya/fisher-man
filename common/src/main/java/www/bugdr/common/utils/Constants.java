@@ -13,8 +13,10 @@ public interface Constants {
         String STATUS_DISABLE = "0"; // 禁用
         // tokenkey
         String TOKEN_KEY = "token_key_";
-        //
+        // refreshToken
         String FISHER_KEY = "fisher_key";
+        //盐值
+        String KEY_SALT = "key_salt_";
 
     }
 

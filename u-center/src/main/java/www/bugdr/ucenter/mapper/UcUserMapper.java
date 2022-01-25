@@ -2,7 +2,7 @@ package www.bugdr.ucenter.mapper;
 
 import www.bugdr.ucenter.pojo.UcUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import www.bugdr.ucenter.vo.UserVo;
+import www.bugdr.ucenter.vo.LoginBean;
 
 /**
  * <p>
@@ -14,5 +14,5 @@ import www.bugdr.ucenter.vo.UserVo;
  */
 public interface UcUserMapper extends BaseMapper<UcUser> {
 
-    UserVo getUserByAccount(String name);
+    UcUser getUserByAccount(String name);
 }

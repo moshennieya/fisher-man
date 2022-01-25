@@ -16,6 +16,7 @@ public class R {
 
     public static final int CODE_SUCCESS = 20000;
     public static final int CODE_FAILED = 40000;
+    public static final int CODE_NOT_LOGIN = 40001;
 
     //是否成功
     private boolean success;
@@ -44,6 +45,12 @@ public class R {
         R success = SUCCESS(msg);
         success.data = data;
         return success;
+    }
+
+    public static R NOT_LOGIN() {
+        R failed = FAILED("账户未登录.");
+        failed.code = CODE_NOT_LOGIN;
+        return failed;
     }
 
     public static R FAILED(String msg) {

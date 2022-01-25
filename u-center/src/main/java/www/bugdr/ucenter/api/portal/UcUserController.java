@@ -1,10 +1,7 @@
 package www.bugdr.ucenter.api.portal;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import www.bugdr.common.response.R;
 import www.bugdr.ucenter.service.IUcUserService;
 import www.bugdr.ucenter.vo.LoginVo;
@@ -37,8 +34,18 @@ public class UcUserController {
         return iUcUserService.addUser(emailCode, registerVo);
     }
 
-    @PostMapping("/uc/login")
+    @PostMapping("/uc/user/login")
     public R login(@RequestBody LoginVo loginVo, @RequestParam("verifition") String verifition) {
-        return iUcUserService.login(loginVo,verifition);
+        return iUcUserService.login(loginVo, verifition);
+    }
+
+    @GetMapping("/uc/user/check/token")
+    public R checkToken() {
+        return iUcUserService.checkToken();
+    }
+
+    @GetMapping("/uc/user/logout")
+    public R logout() {
+        return iUcUserService.doLogout();
     }
 }

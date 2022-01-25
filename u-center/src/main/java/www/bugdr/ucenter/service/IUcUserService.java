@@ -30,4 +30,16 @@ public interface IUcUserService extends IService<UcUser> {
      * @return
      */
     R login(LoginVo loginVo, String verifition);
+
+    /**
+     * 解析token
+     * @return
+     */
+    R checkToken();
+
+    /**
+     * 退出
+     * @return
+     */
+    R doLogout();
 }

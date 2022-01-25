@@ -6,6 +6,7 @@ import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,14 +23,14 @@ import www.bugdr.ucenter.pojo.UcUserInfo;
 import www.bugdr.ucenter.service.IUcTokenService;
 import www.bugdr.ucenter.service.IUcUserInfoService;
 import www.bugdr.ucenter.service.IUcUserService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import www.bugdr.ucenter.utils.ClaimsUtils;
 import www.bugdr.ucenter.utils.CookieUtils;
 import www.bugdr.ucenter.utils.JwtUtils;
-import www.bugdr.ucenter.vo.UserVo;
+import www.bugdr.ucenter.vo.LoginBean;
 import www.bugdr.ucenter.vo.LoginVo;
 import www.bugdr.ucenter.vo.RegisterVo;
+import www.bugdr.ucenter.vo.UserVo;
 
 import java.util.Map;
 
@@ -170,7 +171,7 @@ public class UcUserServiceImpl extends BaseService<UcUserMapper, UcUser> impleme
             return R.FAILED("请使用MD5加密算法进行装换.");
         }
         //查询用户
-        UserVo userByAccount = this.baseMapper.getUserByAccount(name);
+        UcUser userByAccount = this.baseMapper.getUserByAccount(name);
         log.info("userByAccount ==> {}", userByAccount);
         if (userByAccount == null) {
             return R.FAILED("账户或者密码不正确.");
@@ -190,14 +191,117 @@ public class UcUserServiceImpl extends BaseService<UcUserMapper, UcUser> impleme
     }
 
     /**
+     * 解析token
+     *
+     * @return
+     */
+    @Override
+    public R checkToken() {
+        //先拿到tokenKey
+        String tokenKey = CookieUtils.getCookie(getRequest(), Constants.User.FISHER_KEY);
+        if (TextUtils.isEmpty(tokenKey)) {
+            return R.NOT_LOGIN();
+        }
+        //先去redis拿数据,有可能超过两个小时，没有
+        String token = (String) redisUtils.get(Constants.User.TOKEN_KEY + tokenKey);
+        String salt = (String) redisUtils.get(Constants.User.KEY_SALT + tokenKey);
+        if (TextUtils.isEmpty(salt)) {
+            return R.NOT_LOGIN();
+        }
+        if (!TextUtils.isEmpty(tokenKey)) {
+            //存在就解析token
+            try {
+                Claims claims = JwtUtils.parseJWT(token, salt);
+                UserVo userVo = ClaimsUtils.claims2User(claims);
+                return R.SUCCESS("登录成功.").setData(userVo);
+            } catch (Exception e) {
+                e.printStackTrace();
+                //走检查refreshToken
+                return checkRefreshToken(tokenKey, salt);
+            }
+        } else {
+            //走检查refreshToken
+            return checkRefreshToken(tokenKey, salt);
+        }
+    }
+
+    /**
+     * 退出登录
+     *
+     * @return
+     */
+    @Override
+    public R doLogout() {
+        String tokenKey = CookieUtils.getCookie(getRequest(), Constants.User.FISHER_KEY);
+        if (TextUtils.isEmpty(tokenKey)) {
+            return R.NOT_LOGIN();
+        }
+        //删除各种东西
+        //删除redis的token
+        redisUtils.del(Constants.User.TOKEN_KEY + tokenKey);
+        QueryWrapper<UcToken> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("token_key", tokenKey);
+        iUcTokenService.remove(queryWrapper);
+        //删除salt
+        redisUtils.del(Constants.User.KEY_SALT + tokenKey);
+        //删除cookie
+        CookieUtils.setUpCookie(getResponse(), Constants.User.TOKEN_KEY + tokenKey, "");
+        return R.SUCCESS("退出登录成功.");
+    }
+
+    /**
+     * 从数据库中找到refreshToken，不存在就没有登录
+     * 如果存在，判断是否过期
+     *
+     * @param salt
+     * @param tokenKey
+     * @return
+     */
+    private R checkRefreshToken(String tokenKey, String salt) {
+        QueryWrapper<UcToken> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("token_key", tokenKey);
+        queryWrapper.select("refresh_token");
+        queryWrapper.select("refresh_token", "user_id");
+        UcToken ucToken = iUcTokenService.getOne(queryWrapper);
+        if (ucToken != null) {
+            try {
+                JwtUtils.parseJWT(ucToken.getRefreshToken(), salt);
+                //通过用户id查到用户，再创建token
+                String userId = ucToken.getUserId();
+                //创建之前先删除原来的数据
+                redisUtils.del(Constants.User.TOKEN_KEY + tokenKey);
+                //创建新的token
+                UcUser ucUser = getById(userId);
+                UserVo userVo = new UserVo();
+                userVo.setId(userId);
+                userVo.setUserName(ucUser.getUserName());
+                userVo.setSex(ucUser.getSex());
+                userVo.setAvatar(ucUser.getAvatar());
+                userVo.setStatus(ucUser.getStatus());
+                createToken(ucUser);
+                return R.SUCCESS("已登录").setData(userVo);
+            } catch (Exception e) {
+                e.printStackTrace();
+                //过期未登录
+            }
+
+        }
+        return R.NOT_LOGIN();
+    }
+
+    /**
      * 创建token
      * token （有效两小时，JWT，web，token，存放redis）
      * tokneKey（token的MD5摘要值）
      * refreshToken（有效期1个月，放到数据库）
+     *
      * @param userByAccount
      */
-    private void createToken(UserVo userByAccount) {
-
+    private void createToken(UcUser userByAccount) {
+        //删除当前用户的refresh_token,后面会重新创建
+        QueryWrapper<UcToken> ucTokenQueryWrapper = new QueryWrapper<>();
+        ucTokenQueryWrapper.eq("user_id", userByAccount.getId());
+        iUcTokenService.remove(ucTokenQueryWrapper);
         Map<String, Object> claims = ClaimsUtils.user2Claims(userByAccount);
         //创建token
         String token = JwtUtils.createToken(claims, Constants.Millins.TWO_HOUR, userByAccount.getSalt());
@@ -205,12 +309,15 @@ public class UcUserServiceImpl extends BaseService<UcUserMapper, UcUser> impleme
         String refreshToken = JwtUtils.createRefreshToken(userByAccount.getId(), Constants.Millins.MONTH,
                 userByAccount.getSalt());
         //去各自的地方
-        redisUtils.set(Constants.User.TOKEN_KEY+tokenKey,token,Constants.TimeSecond.TWO_HOUR);
-        CookieUtils.setUpCookie(getResponse(),Constants.User.FISHER_KEY,tokenKey);
+        redisUtils.set(Constants.User.TOKEN_KEY + tokenKey, token, Constants.TimeSecond.TWO_HOUR);
+        CookieUtils.setUpCookie(getResponse(), Constants.User.FISHER_KEY, tokenKey);
         UcToken targetRefreshToken = new UcToken();
         targetRefreshToken.setRefreshToken(refreshToken);
         targetRefreshToken.setTokenKey(tokenKey);
         targetRefreshToken.setUserId(userByAccount.getId());
         iUcTokenService.save(targetRefreshToken);
+        //保存盐值到redis
+        String salt = userByAccount.getSalt();
+        redisUtils.set(Constants.User.KEY_SALT + tokenKey, salt, Constants.Millins.DAY);
     }
 }
