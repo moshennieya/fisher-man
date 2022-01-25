@@ -10,25 +10,24 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import www.bugdr.common.response.R;
 import www.bugdr.common.utils.Constants;
 import www.bugdr.common.utils.RedisUtils;
 import www.bugdr.common.utils.TextUtils;
+import www.bugdr.ucenter.base.BaseService;
+import www.bugdr.ucenter.mapper.UcUserMapper;
+import www.bugdr.ucenter.pojo.UcUser;
 import www.bugdr.ucenter.pojo.UcUserInfo;
 import www.bugdr.ucenter.service.IUcUserExService;
 import www.bugdr.ucenter.service.IUcUserInfoService;
 import www.bugdr.ucenter.utils.EmailSendUtils;
-
-import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
 @Service
-public class UcUserExServiceImpl implements IUcUserExService {
+public class UcUserExServiceImpl extends BaseService<UcUserMapper, UcUser> implements IUcUserExService {
 
 
     @Autowired
@@ -93,10 +92,7 @@ public class UcUserExServiceImpl implements IUcUserExService {
             return R.FAILED("该邮箱未注册.");
         }
         //防止恶意频繁调用，可以通过ip，通过邮箱地址
-        ServletRequestAttributes requestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = requestAttributes.getRequest();
-        String remoteAddr = request.getRemoteAddr();
+        String remoteAddr = getRequest().getRemoteAddr();
         log.info("remoteAddr ==> ", remoteAddr);
         remoteAddr = remoteAddr.replaceAll(":", "-");
         //组合key和ip

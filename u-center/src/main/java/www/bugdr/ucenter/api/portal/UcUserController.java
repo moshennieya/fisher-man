@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import www.bugdr.common.response.R;
 import www.bugdr.ucenter.service.IUcUserService;
+import www.bugdr.ucenter.vo.LoginVo;
 import www.bugdr.ucenter.vo.RegisterVo;
 
 /**
@@ -34,5 +35,10 @@ public class UcUserController {
     @PostMapping("/uc/user")
     public R register(@RequestParam("emailCode") String emailCode, @RequestBody RegisterVo registerVo) {
         return iUcUserService.addUser(emailCode, registerVo);
+    }
+
+    @PostMapping("/uc/login")
+    public R login(@RequestBody LoginVo loginVo, @RequestParam("verifition") String verifition) {
+        return iUcUserService.login(loginVo,verifition);
     }
 }
