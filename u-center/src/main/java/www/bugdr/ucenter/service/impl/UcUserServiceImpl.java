@@ -186,8 +186,14 @@ public class UcUserServiceImpl extends BaseService<UcUserMapper, UcUser> impleme
         }
         //创建token
         createToken(userByAccount);
+        UserVo userVo = new UserVo();
+        userVo.setUserName(userByAccount.getUserName());
+        userVo.setAvatar(userByAccount.getAvatar());
+        userVo.setSex(userByAccount.getSex());
+        userVo.setId(userByAccount.getUserId());
+        userVo.setStatus(userByAccount.getStatus());
         //返回登录结果
-        return R.SUCCESS("登录成功.");
+        return R.SUCCESS("登录成功.").setData(userVo);
     }
 
     /**
@@ -283,8 +289,8 @@ public class UcUserServiceImpl extends BaseService<UcUserMapper, UcUser> impleme
             } catch (Exception e) {
                 e.printStackTrace();
                 //过期未登录
+                return R.NOT_LOGIN();
             }
-
         }
         return R.NOT_LOGIN();
     }
