@@ -5,14 +5,14 @@ spring:
     name: u-center
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mo_yu_ucenter?characterEncoding=utf-8&useSSL=false&useUnicode=true
+    url: jdbc:mysql://106.13.233.140:3306/mo_yu_ucenter?characterEncoding=utf-8&useSSL=false&useUnicode=true
     username: root
-    password: 123456
+    password: du522425
   redis:
     database: 2 #我的0号库使用在其他项目上，我用2号库
-    host: 152.136.183.34
+    host: 106.13.233.140
     port: 6379
-    password: 123456
+    password: du522425
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 输出Sql语句执行日志
